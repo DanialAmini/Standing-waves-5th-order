@@ -1,0 +1,1063 @@
+Imports System.Math
+
+
+Public Class Form1
+    Public Const pi As Double = 3.1415926535897931
+    Public niii As Integer 'order of calculation
+    Public a As Double
+    Function Pressure_head(q As Double, k As Double, eps_ As Double, omega_ As Double, x As Double, t_time As Double, h_depth As Double, type_ As Integer, z As Double, bb_ As Double) As Double
+
+        Dim g As Double
+        Dim eta1, phi_t1, u1, w1 As Double
+        g = 9.81
+
+        eta1 = eta(q, k, eps_, omega_, x, t_time, 1)
+
+        phi_t1 = phi(q, k, eps_, omega_, x, t_time, z, h_depth, 2)
+        u1 = phi(q, k, eps_, omega_, x, t_time, z, h_depth, 3)
+        w1 = phi(q, k, eps_, omega_, x, t_time, z, h_depth, 4)
+
+        Return (phi_t1 + 1 / 2 * (u1 ^ 2 + w1 ^ 2) + g * eta1 - bb_) * (-1 / g)
+
+    End Function
+    Function phi_surf(q As Double, k As Double, eps_ As Double, omega_ As Double, x As Double, t_time As Double, h_depth As Double, type_ As Integer) As Double
+        Dim z As Double
+
+        z = eta(q, k, eps_, omega_, x, t_time, 1)
+
+        Return phi(q, k, eps_, omega_, x, t_time, z, h_depth, type_)
+
+    End Function
+
+    Function phi(q As Double, k As Double, eps_ As Double, omega_ As Double, x As Double, t_time As Double, z As Double, h_depth As Double, type_ As Integer) As Double
+        Dim g As Double
+
+        g = 9.81
+        Dim A(6, 6, 6) As Double
+        Dim temp As Double
+
+        For i = 1 To 6
+            For j = 0 To i
+                For m = 0 To i
+                    A(i, j, m) = 0
+                Next
+            Next
+        Next
+
+        A(1, 1, 1) = -1 / Sqrt(q)
+
+        A(2, 0, 2) = 1 / 16 * (3 * q ^ 2 + 1) / q ^ (3 / 2)
+        A(2, 2, 2) = 3 / 16 * (q ^ 4 - 1) / q ^ (7 / 2)
+
+        A(3, 1, 1) = 1 / 256 * (6 * q ^ 10 + 11 * q ^ 8 - 63 * q ^ 6 + 96 * q ^ 4 + 27 * q ^ 2 + 27) / q ^ (13 / 2)
+        A(3, 1, 3) = -1 / 256 * (31 * q ^ 4 - 62 * q ^ 2 - 9) / q ^ (9 / 2)
+        A(3, 3, 1) = -1 / 256 * (6 * q ^ 8 - 13 * q ^ 6 - 5 * q ^ 4 + 9 * q ^ 2 + 3) / q ^ (9 / 2)
+        A(3, 3, 3) = -1 / 256 * (39 * q ^ 6 - 53 * q ^ 4 + 5 * q ^ 2 + 9) / q ^ (13 / 2)
+
+        A(4, 0, 2) = -1 / 2048 * (18 * q ^ 12 + 27 * q ^ 10 - 91 * q ^ 8 + 344 * q ^ 6 - 122 * q ^ 4 + 117 * q ^ 2 + 27) / q ^ (15 / 2)
+        A(4, 0, 4) = 1 / 4096 * (67 * q ^ 8 - 235 * q ^ 6 - 185 * q ^ 4 + 207 * q ^ 2 + 18) / q ^ (15 / 2)
+        A(4, 2, 2) = 1 / 3072 * (18 * q ^ 12 + 259 * q ^ 10 - 240 * q ^ 8 - 256 * q ^ 6 + 252 * q ^ 4 + 189 * q ^ 2 + 162) / q ^ (19 / 2)
+        A(4, 2, 4) = 1 / 3072 * (398 * q ^ 10 + 63 * q ^ 8 - 1298 * q ^ 6 + 144 * q ^ 4 + 1188 * q ^ 2 + 81) * Sqrt(q) / (4 * q ^ 10 + 3 * q ^ 8)
+        A(4, 4, 2) = 1 / 6144 * (54 * q ^ 14 + 207 * q ^ 12 - 1060 * q ^ 10 - 1743 * q ^ 8 + 4502 * q ^ 6 - 207 * q ^ 4 - 648 * q ^ 2 - 81) * Sqrt(q) / (q ^ 10 + 3 * q ^ 8)
+        A(4, 4, 4) = 1 / 12288 * (197 * q ^ 12 + 1732 * q ^ 10 + 1481 * q ^ 8 - 9872 * q ^ 6 + 7623 * q ^ 4 - 756 * q ^ 2 - 405) * Sqrt(q) / (q ^ 12 + 5 * q ^ 10)
+
+        A(5, 1, 1) = 1 / 65536 * (97200 * q ^ 34 + 969300 * q ^ 32 + 10312920 * q ^ 30 + 40437585 * q ^ 28 - 99942680 * q ^ 26 - 718547767 * q ^ 24 - 1053139982 * q ^ 22 - 468613281 * q ^ 20 - 625150182 * q ^ 18 - 1543359636 * q ^ 16 - 1317006294 * q ^ 14 - 610724583 * q ^ 12 - 538477502 * q ^ 10 - 434987253 * q ^ 8 - 119464668 * q ^ 6 + 24483303 * q ^ 4 + 17432820 * q ^ 2 + 2259900) * Sqrt(q) / (2700 * q ^ 27 + 24945 * q ^ 25 + 73990 * q ^ 23 + 93072 * q ^ 21 + 46690 * q ^ 19 + 1267 * q ^ 17 - 5220 * q ^ 15 - 900 * q ^ 13)
+        A(5, 1, 3) = 1 / 65536 * (192 * q ^ 16 - 8536 * q ^ 14 - 24494 * q ^ 12 - 2281 * q ^ 10 - 7833 * q ^ 8 - 34170 * q ^ 6 - 16344 * q ^ 4 - 25461 * q ^ 2 - 2673) * Sqrt(q) / (4 * q ^ 13 + 3 * q ^ 11)
+        A(5, 1, 5) = -1 / 65536 * (1828 * q ^ 12 + 352 * q ^ 10 - 10757 * q ^ 8 + 35788 * q ^ 6 - 594 * q ^ 4 - 8100 * q ^ 2 - 405) * Sqrt(q) / (4 * q ^ 13 + 3 * q ^ 11)
+        A(5, 3, 1) = 1 / 65536 * (108 * q ^ 18 - 5934 * q ^ 16 + 5105 * q ^ 14 + 46195 * q ^ 12 - 51879 * q ^ 10 - 35153 * q ^ 8 + 4283 * q ^ 6 + 7569 * q ^ 4 + 4239 * q ^ 2 + 891) * Sqrt(q) / (q ^ 13 + 3 * q ^ 11)
+        A(5, 3, 3) = -1 / 65536 * (5400 * q ^ 22 + 12918 * q ^ 20 - 137093 * q ^ 18 - 272731 * q ^ 16 + 357403 * q ^ 14 + 299725 * q ^ 12 + 100929 * q ^ 10 + 467859 * q ^ 8 + 215865 * q ^ 6 - 91935 * q ^ 4 - 169128 * q ^ 2 - 43740) * Sqrt(q) / (4 * q ^ 19 + 35 * q ^ 17 + 84 * q ^ 15 + 45 * q ^ 13)
+        A(5, 3, 5) = -1 / 65536 * (78144 * q ^ 16 + 364169 * q ^ 14 - 491094 * q ^ 12 - 1068351 * q ^ 10 + 1162018 * q ^ 8 + 332347 * q ^ 6 - 358650 * q ^ 4 - 114885 * q ^ 2 - 4050) * Sqrt(q) / (36 * q ^ 17 + 215 * q ^ 15 + 181 * q ^ 13 + 30 * q ^ 11)
+        A(5, 5, 1) = -1 / 65536 * (180 * q ^ 22 - 360 * q ^ 20 - 1329 * q ^ 18 - 1389 * q ^ 16 - 10180 * q ^ 14 + 25076 * q ^ 12 + 40794 * q ^ 10 - 62542 * q ^ 8 + 3864 * q ^ 6 + 3132 * q ^ 4 + 2511 * q ^ 2 + 243) * Sqrt(q) / (5 * q ^ 15 + 18 * q ^ 13 + 9 * q ^ 11)
+        A(5, 5, 3) = -1 / 65536 * (10290 * q ^ 22 + 43395 * q ^ 20 - 173337 * q ^ 18 - 602962 * q ^ 16 + 701240 * q ^ 14 + 1757970 * q ^ 12 - 1345366 * q ^ 10 - 1223160 * q ^ 8 + 844206 * q ^ 6 + 21555 * q ^ 4 - 31401 * q ^ 2 - 2430) * Sqrt(q) / (5 * q ^ 19 + 45 * q ^ 17 + 113 * q ^ 15 + 59 * q ^ 13 - 30 * q ^ 11)
+        A(5, 5, 5) = -1 / 65536 * (5415 * q ^ 16 + 32830 * q ^ 14 - 2142 * q ^ 12 - 121450 * q ^ 10 + 28240 * q ^ 8 + 135290 * q ^ 6 - 88578 * q ^ 4 + 8370 * q ^ 2 + 2025) * Sqrt(q) / (3 * q ^ 17 + 20 * q ^ 15 + 25 * q ^ 13)
+
+
+        temp = 0
+        For i = 1 To niii
+            For j = 0 To i
+                For m = 0 To i
+                    If type_ = 1 Then
+                        'phi, type1
+                        temp = temp + Sqrt(g / k ^ 3) * (eps_ ^ i) * A(i, j, m) * Cos(j * k * x) * Sin(m * omega_ * t_time) * Cosh(j * k * (h_depth + z)) / Cosh(j * k * h_depth)
+                    ElseIf type_ = 2 Then
+                        'phi_t, type2
+                        temp = temp + m * omega_ * Sqrt(g / k ^ 3) * (eps_ ^ i) * A(i, j, m) * Cos(j * k * x) * Cos(m * omega_ * t_time) * Cosh(j * k * (h_depth + z)) / Cosh(j * k * h_depth)
+                    ElseIf type_ = 3 Then
+                        'u, type3
+                        temp = temp - j * k * Sqrt(g / k ^ 3) * (eps_ ^ i) * A(i, j, m) * Sin(j * k * x) * Sin(m * omega_ * t_time) * Cosh(j * k * (h_depth + z)) / Cosh(j * k * h_depth)
+                    ElseIf type_ = 4 Then
+                        'w, type4
+                        temp = temp + j * k * Sqrt(g / k ^ 3) * (eps_ ^ i) * A(i, j, m) * Cos(j * k * x) * Sin(m * omega_ * t_time) * Sinh(j * k * (h_depth + z)) / Cosh(j * k * h_depth)
+                    End If
+                Next
+            Next
+        Next
+        Return temp
+
+
+
+    End Function
+
+    Function eta(q As Double, k As Double, eps_ As Double, omega_ As Double, x As Double, t_time As Double, type_ As Integer) As Double
+        Dim B(6, 6, 6) As Double
+        Dim i, j, m As Integer
+        Dim temp As Double
+
+
+        For i = 1 To 6
+            For j = 0 To i
+                For m = 0 To i
+                    B(i, j, m) = 0
+                Next
+            Next
+        Next
+
+        B(1, 1, 1) = 1
+
+        B(2, 2, 0) = 1 / 8 * (q ^ 2 + 1) / q
+        B(2, 2, 2) = -1 / 8 * (q ^ 2 - 3) / q ^ 3
+
+        B(3, 1, 1) = -1 / 256 * (6 * q ^ 10 + 3 * q ^ 8 - 43 * q ^ 6 + 72 * q ^ 4 + 15 * q ^ 2 + 27) / q ^ 6
+        B(3, 1, 3) = 1 / 256 * (5 * q ^ 4 - 18 * q ^ 2 - 3) / q ^ 4
+        B(3, 3, 1) = 3 / 256 * (2 * q ^ 8 + q ^ 6 - 15 * q ^ 4 + 27 * q ^ 2 + 9) / q ^ 4
+        B(3, 3, 3) = -3 / 256 * (q ^ 6 - 3 * q ^ 4 + 3 * q ^ 2 - 9) / q ^ 6
+
+        B(4, 2, 0) = -1 / 1024 * (32 * q ^ 10 + 18 * q ^ 8 - 23 * q ^ 6 + 27 * q ^ 4 + 63 * q ^ 2 + 27) / q ^ 7
+        B(4, 2, 2) = -1 / 768 * (54 * q ^ 10 + 45 * q ^ 8 - 68 * q ^ 6 + 90 * q ^ 4 + 54 * q ^ 2 + 81) / q ^ 9
+        B(4, 2, 4) = -1 / 3072 * (6 * q ^ 8 + 283 * q ^ 6 - 351 * q ^ 4 + 1053 * q ^ 2 + 81) / (4 * q ^ 9 + 3 * q ^ 7)
+        B(4, 4, 0) = 1 / 1024 * (6 * q ^ 12 + 21 * q ^ 10 - 66 * q ^ 8 + 2 * q ^ 6 + 66 * q ^ 4 + 81 * q ^ 2 + 18) / q ^ 7
+        B(4, 4, 2) = -1 / 768 * (18 * q ^ 12 - 105 * q ^ 10 - 273 * q ^ 8 + 518 * q ^ 6 + 288 * q ^ 4 - 621 * q ^ 2 - 81) / (q ^ 9 + 3 * q ^ 7)
+        B(4, 4, 4) = 1 / 3072 * (21 * q ^ 10 + q ^ 8 - 262 * q ^ 6 + 522 * q ^ 4 + 81 * q ^ 2 + 405) / (q ^ 11 + 5 * q ^ 9)
+
+        B(5, 1, 1) = -1 / 196608 * (291600 * q ^ 34 + 2907900 * q ^ 32 + 32753160 * q ^ 30 + 149869395 * q ^ 28 - 96175800 * q ^ 26 - 1388122677 * q ^ 24 - 1816814730 * q ^ 22 - 673012947 * q ^ 20 - 2204709010 * q ^ 18 - 4183229964 * q ^ 16 - 2019366082 * q ^ 14 - 127366501 * q ^ 12 - 1024292202 * q ^ 10 - 1272297663 * q ^ 8 - 404176500 * q ^ 6 + 54476469 * q ^ 4 + 49965660 * q ^ 2 + 6779700) / (2700 * q ^ 26 + 24945 * q ^ 24 + 73990 * q ^ 22 + 93072 * q ^ 20 + 46690 * q ^ 18 + 1267 * q ^ 16 - 5220 * q ^ 14 - 900 * q ^ 12)
+        B(5, 1, 3) = 1 / 196608 * (576 * q ^ 16 + 8184 * q ^ 14 + 17094 * q ^ 12 + 22645 * q ^ 10 + 2281 * q ^ 8 + 23658 * q ^ 6 + 7776 * q ^ 4 + 22761 * q ^ 2 + 2673) / (4 * q ^ 12 + 3 * q ^ 10)
+        B(5, 1, 5) = 1 / 196608 * (60 * q ^ 12 + 1728 * q ^ 10 + 781 * q ^ 8 + 16476 * q ^ 6 - 4158 * q ^ 4 - 4212 * q ^ 2 - 243) / (4 * q ^ 12 + 3 * q ^ 10)
+        B(5, 3, 1) = -3 / 65536 * (20 * q ^ 18 - 1386 * q ^ 16 + 1159 * q ^ 14 + 17385 * q ^ 12 - 1473 * q ^ 10 - 24611 * q ^ 8 + 13245 * q ^ 6 + 5427 * q ^ 4 + 12393 * q ^ 2 + 2673) / (q ^ 12 + 3 * q ^ 10)
+        B(5, 3, 3) = 3 / 65536 * (216 * q ^ 22 - 570 * q ^ 20 - 18933 * q ^ 18 - 71519 * q ^ 16 - 100329 * q ^ 14 - 35063 * q ^ 12 + 38725 * q ^ 10 - 123273 * q ^ 8 - 114291 * q ^ 6 - 157707 * q ^ 4 - 125388 * q ^ 2 - 43740) / (4 * q ^ 18 + 35 * q ^ 16 + 84 * q ^ 14 + 45 * q ^ 12)
+        B(5, 3, 5) = -3 / 65536 * (320 * q ^ 16 + 1737 * q ^ 14 - 4390 * q ^ 12 - 8591 * q ^ 10 + 157370 * q ^ 8 + 25203 * q ^ 6 + 112590 * q ^ 4 + 62451 * q ^ 2 + 2430) / (36 * q ^ 16 + 215 * q ^ 14 + 181 * q ^ 12 + 30 * q ^ 10)
+        B(5, 5, 1) = 5 / 196608 * (108 * q ^ 22 + 648 * q ^ 20 - 3735 * q ^ 18 + 5853 * q ^ 16 + 84492 * q ^ 14 + 18828 * q ^ 12 - 256546 * q ^ 10 - 31890 * q ^ 8 + 169632 * q ^ 6 + 96228 * q ^ 4 + 37665 * q ^ 2 + 3645) / (5 * q ^ 14 + 18 * q ^ 12 + 9 * q ^ 10)
+        B(5, 5, 3) = -5 / 196608 * (342 * q ^ 22 + 1257 * q ^ 20 + 2085 * q ^ 18 - 31430 * q ^ 16 - 390368 * q ^ 14 - 350282 * q ^ 12 + 1479350 * q ^ 10 + 570136 * q ^ 8 - 1001838 * q ^ 6 - 419175 * q ^ 4 + 146205 * q ^ 2 + 12150) / (5 * q ^ 18 + 45 * q ^ 16 + 113 * q ^ 14 + 59 * q ^ 12 - 30 * q ^ 10)
+        B(5, 5, 5) = 5 / 196608 * (45 * q ^ 16 - 150 * q ^ 14 - 570 * q ^ 12 + 2618 * q ^ 10 - 3896 * q ^ 8 - 498 * q ^ 6 + 25866 * q ^ 4 + 8910 * q ^ 2 + 6075) / (3 * q ^ 16 + 20 * q ^ 14 + 25 * q ^ 12)
+
+        temp = 0
+        For i = 1 To niii
+            For j = 0 To i
+                For m = 0 To i
+                    If type_ = 1 Then
+                        'eta, type1
+                        temp = temp + 1 / k * (eps_ ^ i) * B(i, j, m) * Cos(j * k * x) * Cos(m * omega_ * t_time)
+                    ElseIf type_ = 2 Then
+                        'eta_t, type2
+                        temp = temp - m * omega_ * 1 / k * (eps_ ^ i) * B(i, j, m) * Cos(j * k * x) * Sin(m * omega_ * t_time)
+                    ElseIf type_ = 3 Then
+                        'eta_x, type3
+                        temp = temp - j * k * 1 / k * (eps_ ^ i) * B(i, j, m) * Sin(j * k * x) * Cos(m * omega_ * t_time)
+                    End If
+                Next
+            Next
+        Next
+        Return temp
+
+    End Function
+
+    Function Err_fd(q As Double, k As Double, eps_ As Double, omega_ As Double, L As Double, T_period As Double, h_depth As Double, bb_ As Double) As Double
+
+        Dim g As Double
+        Dim temp As Double
+        Dim i, j As Integer
+        Dim x, t_time, eta1, phi_t1, u1, w1 As Double
+        g = 9.81
+        temp = 0
+        For i = 0 To 50
+            For j = 0 To 50
+                x = i / 50 * L / 2
+                t_time = j / 50 * T_period / 2
+
+                eta1 = eta(q, k, eps_, omega_, x, t_time, 1)
+
+                phi_t1 = phi_surf(q, k, eps_, omega_, x, t_time, h_depth, 2)
+                u1 = phi_surf(q, k, eps_, omega_, x, t_time, h_depth, 3)
+                w1 = phi_surf(q, k, eps_, omega_, x, t_time, h_depth, 4)
+
+                temp = temp + Abs(phi_t1 + 1 / 2 * (u1 ^ 2 + w1 ^ 2) + g * eta1 - bb_)
+            Next
+        Next
+
+        Return temp / (51 ^ 2)
+
+    End Function
+
+    Function Err_fk(q As Double, k As Double, eps_ As Double, omega_ As Double, L As Double, T_period As Double, h_depth As Double) As Double
+        Dim temp As Double
+        Dim x As Double
+        Dim t_time As Double
+        Dim eta_t1 As Double
+        Dim eta_x1 As Double
+        Dim u1 As Double
+        Dim w1 As Double
+
+        temp = 0
+        For i = 0 To 50
+            For j = 0 To 50
+                x = i / 50 * L / 2
+                t_time = j / 50 * T_period / 2
+
+                eta_t1 = eta(q, k, eps_, omega_, x, t_time, 2)
+                eta_x1 = eta(q, k, eps_, omega_, x, t_time, 3)
+
+                u1 = phi_surf(q, k, eps_, omega_, x, t_time, h_depth, 3)
+                w1 = phi_surf(q, k, eps_, omega_, x, t_time, h_depth, 4)
+
+                temp = temp + Abs(eta_t1 + u1 * eta_x1 - w1)
+
+            Next
+        Next
+
+        Return temp / (51 ^ 2)
+
+    End Function
+    Public Function bb(eps As Double, q As Double)
+
+        'dimensionless bb
+        'it should be later multiplied by g/k inside the sheet
+        Dim temp As Double
+        temp = 0
+
+        Dim D(6) As Double
+
+
+        D(1) = 0
+        D(2) = -1 / 8 * (q ^ 2 - 1) / q
+        D(3) = 0
+        D(4) = 1 / 1024 * (6 * q ^ 12 + 5 * q ^ 10 - 56 * q ^ 8 + 87 * q ^ 6 + 39 * q ^ 4 - 72 * q ^ 2 - 9) / q ^ 7
+        D(5) = 0
+
+        For i = 1 To niii
+            temp = temp + (eps ^ i) * D(i)
+        Next
+        Return temp
+
+    End Function
+
+    Function coeff_(ii As Integer, jj As Integer, mm As Integer, q As Double, type_of_ As String) As Double
+        Dim C(6) As Double
+        Dim D(6) As Double
+        Dim A(6, 6, 6) As Double
+        Dim B(6, 6, 6) As Double
+
+        A(1, 1, 1) = -1 / Sqrt(q)
+
+        A(2, 0, 2) = 1 / 16 * (3 * q ^ 2 + 1) / q ^ (3 / 2)
+        A(2, 2, 2) = 3 / 16 * (q ^ 4 - 1) / q ^ (7 / 2)
+
+        A(3, 1, 1) = 1 / 256 * (6 * q ^ 10 + 11 * q ^ 8 - 63 * q ^ 6 + 96 * q ^ 4 + 27 * q ^ 2 + 27) / q ^ (13 / 2)
+        A(3, 1, 3) = -1 / 256 * (31 * q ^ 4 - 62 * q ^ 2 - 9) / q ^ (9 / 2)
+        A(3, 3, 1) = -1 / 256 * (6 * q ^ 8 - 13 * q ^ 6 - 5 * q ^ 4 + 9 * q ^ 2 + 3) / q ^ (9 / 2)
+        A(3, 3, 3) = -1 / 256 * (39 * q ^ 6 - 53 * q ^ 4 + 5 * q ^ 2 + 9) / q ^ (13 / 2)
+
+        A(4, 0, 2) = -1 / 2048 * (18 * q ^ 12 + 27 * q ^ 10 - 91 * q ^ 8 + 344 * q ^ 6 - 122 * q ^ 4 + 117 * q ^ 2 + 27) / q ^ (15 / 2)
+        A(4, 0, 4) = 1 / 4096 * (67 * q ^ 8 - 235 * q ^ 6 - 185 * q ^ 4 + 207 * q ^ 2 + 18) / q ^ (15 / 2)
+        A(4, 2, 2) = 1 / 3072 * (18 * q ^ 12 + 259 * q ^ 10 - 240 * q ^ 8 - 256 * q ^ 6 + 252 * q ^ 4 + 189 * q ^ 2 + 162) / q ^ (19 / 2)
+        A(4, 2, 4) = 1 / 3072 * (398 * q ^ 10 + 63 * q ^ 8 - 1298 * q ^ 6 + 144 * q ^ 4 + 1188 * q ^ 2 + 81) * Sqrt(q) / (4 * q ^ 10 + 3 * q ^ 8)
+        A(4, 4, 2) = 1 / 6144 * (54 * q ^ 14 + 207 * q ^ 12 - 1060 * q ^ 10 - 1743 * q ^ 8 + 4502 * q ^ 6 - 207 * q ^ 4 - 648 * q ^ 2 - 81) * Sqrt(q) / (q ^ 10 + 3 * q ^ 8)
+        A(4, 4, 4) = 1 / 12288 * (197 * q ^ 12 + 1732 * q ^ 10 + 1481 * q ^ 8 - 9872 * q ^ 6 + 7623 * q ^ 4 - 756 * q ^ 2 - 405) * Sqrt(q) / (q ^ 12 + 5 * q ^ 10)
+
+        A(5, 1, 1) = 1 / 65536 * (97200 * q ^ 34 + 969300 * q ^ 32 + 10312920 * q ^ 30 + 40437585 * q ^ 28 - 99942680 * q ^ 26 - 718547767 * q ^ 24 - 1053139982 * q ^ 22 - 468613281 * q ^ 20 - 625150182 * q ^ 18 - 1543359636 * q ^ 16 - 1317006294 * q ^ 14 - 610724583 * q ^ 12 - 538477502 * q ^ 10 - 434987253 * q ^ 8 - 119464668 * q ^ 6 + 24483303 * q ^ 4 + 17432820 * q ^ 2 + 2259900) * Sqrt(q) / (2700 * q ^ 27 + 24945 * q ^ 25 + 73990 * q ^ 23 + 93072 * q ^ 21 + 46690 * q ^ 19 + 1267 * q ^ 17 - 5220 * q ^ 15 - 900 * q ^ 13)
+        A(5, 1, 3) = 1 / 65536 * (192 * q ^ 16 - 8536 * q ^ 14 - 24494 * q ^ 12 - 2281 * q ^ 10 - 7833 * q ^ 8 - 34170 * q ^ 6 - 16344 * q ^ 4 - 25461 * q ^ 2 - 2673) * Sqrt(q) / (4 * q ^ 13 + 3 * q ^ 11)
+        A(5, 1, 5) = -1 / 65536 * (1828 * q ^ 12 + 352 * q ^ 10 - 10757 * q ^ 8 + 35788 * q ^ 6 - 594 * q ^ 4 - 8100 * q ^ 2 - 405) * Sqrt(q) / (4 * q ^ 13 + 3 * q ^ 11)
+        A(5, 3, 1) = 1 / 65536 * (108 * q ^ 18 - 5934 * q ^ 16 + 5105 * q ^ 14 + 46195 * q ^ 12 - 51879 * q ^ 10 - 35153 * q ^ 8 + 4283 * q ^ 6 + 7569 * q ^ 4 + 4239 * q ^ 2 + 891) * Sqrt(q) / (q ^ 13 + 3 * q ^ 11)
+        A(5, 3, 3) = -1 / 65536 * (5400 * q ^ 22 + 12918 * q ^ 20 - 137093 * q ^ 18 - 272731 * q ^ 16 + 357403 * q ^ 14 + 299725 * q ^ 12 + 100929 * q ^ 10 + 467859 * q ^ 8 + 215865 * q ^ 6 - 91935 * q ^ 4 - 169128 * q ^ 2 - 43740) * Sqrt(q) / (4 * q ^ 19 + 35 * q ^ 17 + 84 * q ^ 15 + 45 * q ^ 13)
+        A(5, 3, 5) = -1 / 65536 * (78144 * q ^ 16 + 364169 * q ^ 14 - 491094 * q ^ 12 - 1068351 * q ^ 10 + 1162018 * q ^ 8 + 332347 * q ^ 6 - 358650 * q ^ 4 - 114885 * q ^ 2 - 4050) * Sqrt(q) / (36 * q ^ 17 + 215 * q ^ 15 + 181 * q ^ 13 + 30 * q ^ 11)
+        A(5, 5, 1) = -1 / 65536 * (180 * q ^ 22 - 360 * q ^ 20 - 1329 * q ^ 18 - 1389 * q ^ 16 - 10180 * q ^ 14 + 25076 * q ^ 12 + 40794 * q ^ 10 - 62542 * q ^ 8 + 3864 * q ^ 6 + 3132 * q ^ 4 + 2511 * q ^ 2 + 243) * Sqrt(q) / (5 * q ^ 15 + 18 * q ^ 13 + 9 * q ^ 11)
+        A(5, 5, 3) = -1 / 65536 * (10290 * q ^ 22 + 43395 * q ^ 20 - 173337 * q ^ 18 - 602962 * q ^ 16 + 701240 * q ^ 14 + 1757970 * q ^ 12 - 1345366 * q ^ 10 - 1223160 * q ^ 8 + 844206 * q ^ 6 + 21555 * q ^ 4 - 31401 * q ^ 2 - 2430) * Sqrt(q) / (5 * q ^ 19 + 45 * q ^ 17 + 113 * q ^ 15 + 59 * q ^ 13 - 30 * q ^ 11)
+        A(5, 5, 5) = -1 / 65536 * (5415 * q ^ 16 + 32830 * q ^ 14 - 2142 * q ^ 12 - 121450 * q ^ 10 + 28240 * q ^ 8 + 135290 * q ^ 6 - 88578 * q ^ 4 + 8370 * q ^ 2 + 2025) * Sqrt(q) / (3 * q ^ 17 + 20 * q ^ 15 + 25 * q ^ 13)
+
+        B(1, 1, 1) = 1
+
+        B(2, 2, 0) = 1 / 8 * (q ^ 2 + 1) / q
+        B(2, 2, 2) = -1 / 8 * (q ^ 2 - 3) / q ^ 3
+
+        B(3, 1, 1) = -1 / 256 * (6 * q ^ 10 + 3 * q ^ 8 - 43 * q ^ 6 + 72 * q ^ 4 + 15 * q ^ 2 + 27) / q ^ 6
+        B(3, 1, 3) = 1 / 256 * (5 * q ^ 4 - 18 * q ^ 2 - 3) / q ^ 4
+        B(3, 3, 1) = 3 / 256 * (2 * q ^ 8 + q ^ 6 - 15 * q ^ 4 + 27 * q ^ 2 + 9) / q ^ 4
+        B(3, 3, 3) = -3 / 256 * (q ^ 6 - 3 * q ^ 4 + 3 * q ^ 2 - 9) / q ^ 6
+
+        B(4, 2, 0) = -1 / 1024 * (32 * q ^ 10 + 18 * q ^ 8 - 23 * q ^ 6 + 27 * q ^ 4 + 63 * q ^ 2 + 27) / q ^ 7
+        B(4, 2, 2) = -1 / 768 * (54 * q ^ 10 + 45 * q ^ 8 - 68 * q ^ 6 + 90 * q ^ 4 + 54 * q ^ 2 + 81) / q ^ 9
+        B(4, 2, 4) = -1 / 3072 * (6 * q ^ 8 + 283 * q ^ 6 - 351 * q ^ 4 + 1053 * q ^ 2 + 81) / (4 * q ^ 9 + 3 * q ^ 7)
+        B(4, 4, 0) = 1 / 1024 * (6 * q ^ 12 + 21 * q ^ 10 - 66 * q ^ 8 + 2 * q ^ 6 + 66 * q ^ 4 + 81 * q ^ 2 + 18) / q ^ 7
+        B(4, 4, 2) = -1 / 768 * (18 * q ^ 12 - 105 * q ^ 10 - 273 * q ^ 8 + 518 * q ^ 6 + 288 * q ^ 4 - 621 * q ^ 2 - 81) / (q ^ 9 + 3 * q ^ 7)
+        B(4, 4, 4) = 1 / 3072 * (21 * q ^ 10 + q ^ 8 - 262 * q ^ 6 + 522 * q ^ 4 + 81 * q ^ 2 + 405) / (q ^ 11 + 5 * q ^ 9)
+
+        B(5, 1, 1) = -1 / 196608 * (291600 * q ^ 34 + 2907900 * q ^ 32 + 32753160 * q ^ 30 + 149869395 * q ^ 28 - 96175800 * q ^ 26 - 1388122677 * q ^ 24 - 1816814730 * q ^ 22 - 673012947 * q ^ 20 - 2204709010 * q ^ 18 - 4183229964 * q ^ 16 - 2019366082 * q ^ 14 - 127366501 * q ^ 12 - 1024292202 * q ^ 10 - 1272297663 * q ^ 8 - 404176500 * q ^ 6 + 54476469 * q ^ 4 + 49965660 * q ^ 2 + 6779700) / (2700 * q ^ 26 + 24945 * q ^ 24 + 73990 * q ^ 22 + 93072 * q ^ 20 + 46690 * q ^ 18 + 1267 * q ^ 16 - 5220 * q ^ 14 - 900 * q ^ 12)
+        B(5, 1, 3) = 1 / 196608 * (576 * q ^ 16 + 8184 * q ^ 14 + 17094 * q ^ 12 + 22645 * q ^ 10 + 2281 * q ^ 8 + 23658 * q ^ 6 + 7776 * q ^ 4 + 22761 * q ^ 2 + 2673) / (4 * q ^ 12 + 3 * q ^ 10)
+        B(5, 1, 5) = 1 / 196608 * (60 * q ^ 12 + 1728 * q ^ 10 + 781 * q ^ 8 + 16476 * q ^ 6 - 4158 * q ^ 4 - 4212 * q ^ 2 - 243) / (4 * q ^ 12 + 3 * q ^ 10)
+        B(5, 3, 1) = -3 / 65536 * (20 * q ^ 18 - 1386 * q ^ 16 + 1159 * q ^ 14 + 17385 * q ^ 12 - 1473 * q ^ 10 - 24611 * q ^ 8 + 13245 * q ^ 6 + 5427 * q ^ 4 + 12393 * q ^ 2 + 2673) / (q ^ 12 + 3 * q ^ 10)
+        B(5, 3, 3) = 3 / 65536 * (216 * q ^ 22 - 570 * q ^ 20 - 18933 * q ^ 18 - 71519 * q ^ 16 - 100329 * q ^ 14 - 35063 * q ^ 12 + 38725 * q ^ 10 - 123273 * q ^ 8 - 114291 * q ^ 6 - 157707 * q ^ 4 - 125388 * q ^ 2 - 43740) / (4 * q ^ 18 + 35 * q ^ 16 + 84 * q ^ 14 + 45 * q ^ 12)
+        B(5, 3, 5) = -3 / 65536 * (320 * q ^ 16 + 1737 * q ^ 14 - 4390 * q ^ 12 - 8591 * q ^ 10 + 157370 * q ^ 8 + 25203 * q ^ 6 + 112590 * q ^ 4 + 62451 * q ^ 2 + 2430) / (36 * q ^ 16 + 215 * q ^ 14 + 181 * q ^ 12 + 30 * q ^ 10)
+        B(5, 5, 1) = 5 / 196608 * (108 * q ^ 22 + 648 * q ^ 20 - 3735 * q ^ 18 + 5853 * q ^ 16 + 84492 * q ^ 14 + 18828 * q ^ 12 - 256546 * q ^ 10 - 31890 * q ^ 8 + 169632 * q ^ 6 + 96228 * q ^ 4 + 37665 * q ^ 2 + 3645) / (5 * q ^ 14 + 18 * q ^ 12 + 9 * q ^ 10)
+        B(5, 5, 3) = -5 / 196608 * (342 * q ^ 22 + 1257 * q ^ 20 + 2085 * q ^ 18 - 31430 * q ^ 16 - 390368 * q ^ 14 - 350282 * q ^ 12 + 1479350 * q ^ 10 + 570136 * q ^ 8 - 1001838 * q ^ 6 - 419175 * q ^ 4 + 146205 * q ^ 2 + 12150) / (5 * q ^ 18 + 45 * q ^ 16 + 113 * q ^ 14 + 59 * q ^ 12 - 30 * q ^ 10)
+        B(5, 5, 5) = 5 / 196608 * (45 * q ^ 16 - 150 * q ^ 14 - 570 * q ^ 12 + 2618 * q ^ 10 - 3896 * q ^ 8 - 498 * q ^ 6 + 25866 * q ^ 4 + 8910 * q ^ 2 + 6075) / (3 * q ^ 16 + 20 * q ^ 14 + 25 * q ^ 12)
+
+        C(1) = Sqrt(q)
+        C(2) = 0
+        C(3) = -1 / 64 * (2 * q ^ 6 + 3 * q ^ 4 + 12 * q ^ 2 - 9) / q ^ (7 / 2)
+        C(4) = 0
+        C(5) = -1 / 16384 * (12 * q ^ 16 - 176 * q ^ 14 - 681 * q ^ 12 + 201 * q ^ 10 + 279 * q ^ 8 - 978 * q ^ 6 - 279 * q ^ 4 + 513 * q ^ 2 + 405) / q ^ (19 / 2)
+
+        D(1) = 0
+        D(2) = -1 / 8 * (q ^ 2 - 1) / q
+        D(3) = 0
+        D(4) = 1 / 1024 * (6 * q ^ 12 + 5 * q ^ 10 - 56 * q ^ 8 + 87 * q ^ 6 + 39 * q ^ 4 - 72 * q ^ 2 - 9) / q ^ 7
+        D(5) = 0
+
+        If type_of_ = "C" Then
+            Return C(ii)
+        ElseIf type_of_ = "D" Then
+            Return D(ii)
+        ElseIf type_of_ = "A" Then
+            Return A(ii, jj, mm)
+        ElseIf type_of_ = "B" Then
+            Return B(ii, jj, mm)
+        End If
+
+        Return 1
+
+    End Function
+
+
+
+    Function aa(t As Double) As Double
+
+        Return t ^ 2
+    End Function
+    Function pr1(t As Double) As String
+        Dim mystr As String
+        mystr = CStr(t)
+        Dim len As Integer
+        len = 24 - mystr.Length
+        For i = 1 To len
+            mystr = mystr + " "
+        Next
+        Return mystr
+    End Function
+
+    Function pr2(t As String) As String
+        Dim mystr As String
+        mystr = t
+        Dim len As Integer
+        len = 24 - mystr.Length
+        For i = 1 To len
+            mystr = mystr + " "
+        Next
+        Return mystr
+    End Function
+    Function L_iterator(T_period As Double, H_height As Double, h_depth As Double) As Double
+        Dim g As Double
+        g = 9.81
+
+        Dim L As Double
+        L = 0.5 * T_period * Sqrt(g * h_depth) + 0.5 * g * T_period ^ 2 / (2 * pi)
+
+        Dim k As Double
+        Dim eps As Double
+        Dim q As Double
+
+        Dim T_period_try As Double
+
+        For i = 1 To 100
+            k = 2 * pi / L
+
+            eps = H_height * k / 2
+            q = Tanh(k * h_depth)
+
+            T_period_try = 2 * pi / (Sqrt(g * k) * omega(eps, q))
+            L = L + (T_period - T_period_try) * 10
+        Next
+        Return L
+    End Function
+
+
+    Function omega(eps As Double, q As Double) As Double
+        'dimensionless omega
+        'it should be later multiplied by (g*k)^0.5 inside the sheet
+        Dim temp As Double
+        Dim i As Integer
+        temp = 0
+
+        Dim C(6) As Double
+        Dim D(6) As Double
+
+
+
+        C(1) = Sqrt(q)
+        C(2) = 0
+        C(3) = -1 / 64 * (2 * q ^ 6 + 3 * q ^ 4 + 12 * q ^ 2 - 9) / q ^ (7 / 2)
+        C(4) = 0
+        C(5) = -1 / 16384 * (12 * q ^ 16 - 176 * q ^ 14 - 681 * q ^ 12 + 201 * q ^ 10 + 279 * q ^ 8 - 978 * q ^ 6 - 279 * q ^ 4 + 513 * q ^ 2 + 405) / q ^ (19 / 2)
+
+
+
+        For i = 1 To niii
+            temp = temp + (eps ^ (i - 1)) * C(i)
+        Next
+
+        Return temp
+
+
+    End Function
+
+    Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+
+    End Sub
+
+    Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
+        niii = TextBox4.Text
+        RichTextBox1.Clear()
+        RichTextBox2.Clear()
+        RichTextBox1.Font = New Font("Courier New", 9, FontStyle.Regular)
+
+        'RichTextBox1.Font.SizeInPoints(14)
+        Dim mystr As String
+        Dim L As Double
+        Dim k As Double
+        Dim temp As Double
+        Dim temp2 As Double
+        Dim eps As Double
+        Dim T_period As Double
+        Dim T_period2 As Double
+        Dim H_height As Double
+        Dim h_depth As Double
+        Dim q As Double
+        Dim g As Double
+        Dim omega_ As Double
+        Dim x As Double
+        Dim t_time As Double
+        Dim bb_ As Double
+
+        T_period = 10
+        H_height = 10
+        h_depth = 100
+        g = 9.81
+        L = L_iterator(T_period, H_height, h_depth)
+        k = 2 * pi / L
+        q = Tanh(k * h_depth)
+        eps = H_height * k / 2
+        omega_ = omega(eps, q) * Sqrt(k * g)
+        T_period2 = 2 * pi / omega_
+
+        mystr = "Verifying results" & vbCrLf
+        mystr = mystr & pr2(" ") & pr2("Input") & vbCrLf
+        mystr = mystr & pr2("g (m/s^2)") & pr1(9.81) & vbCrLf
+        mystr = mystr & pr2("h (m)") & pr1(100) & vbCrLf
+        mystr = mystr & pr2("H (m)") & pr1(10) & vbCrLf
+        mystr = mystr & pr2("T (s)") & pr1(10) & vbCrLf
+
+        mystr = mystr & vbCrLf
+
+        mystr = mystr & pr2(" ") & pr2("Present study") & pr2("Sobey 2009") & pr2("difference %") & vbCrLf
+        mystr = mystr & "with iteration" & vbCrLf
+
+        temp = L : temp2 = 154.45
+        mystr = mystr & pr2("L (m)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+
+        temp = k : temp2 = 0.04068
+        mystr = mystr & pr2("k (1/m)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+
+        temp = eps : temp2 = 0.2034
+        mystr = mystr & pr2("epsilon") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+
+        temp = 2 * pi / T_period : temp2 = 0.628318531
+        mystr = mystr & pr2("omega (1/s)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+
+        temp = T_period2 : temp2 = T_period
+        mystr = mystr & pr2("T final (s)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+
+        mystr = mystr & vbCrLf
+
+        temp = coeff_(1, 0, 0, q, "C") : temp2 = 0.9997072
+        mystr = mystr & pr2("C(1)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+
+        temp = coeff_(2, 0, 0, q, "C") : temp2 = 0
+        mystr = mystr & pr2("C(2)") & pr1(temp) & pr1(temp2) & pr1(0) & vbCrLf
+
+        temp = coeff_(3, 0, 0, q, "C") : temp2 = -0.124816808
+        mystr = mystr & pr2("C(3)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+
+        temp = coeff_(4, 0, 0, q, "C") : temp2 = 0
+        mystr = mystr & pr2("C(4)") & pr1(temp) & pr1(temp2) & pr1(0) & vbCrLf
+
+        temp = coeff_(5, 0, 0, q, "C") : temp2 = 0.042772762
+        mystr = mystr & pr2("C(5)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+
+        mystr = mystr & vbCrLf
+
+        temp = coeff_(1, 0, 0, q, "D") : temp2 = 0
+        mystr = mystr & pr2("D(1)") & pr1(temp) & pr1(temp2) & pr1(0) & vbCrLf
+
+        temp = coeff_(2, 0, 0, q, "D") : temp2 = 0.0001464075
+        mystr = mystr & pr2("D(2)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+
+        temp = coeff_(3, 0, 0, q, "D") : temp2 = 0
+        mystr = mystr & pr2("D(3)") & pr1(temp) & pr1(temp2) & pr1(0) & vbCrLf
+
+        temp = coeff_(4, 0, 0, q, "D") : temp2 = -0.0001192351
+        mystr = mystr & pr2("D(4)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+
+        temp = coeff_(5, 0, 0, q, "D") : temp2 = 0
+        mystr = mystr & pr2("D(5)") & pr1(temp) & pr1(temp2) & pr1(0) & vbCrLf
+
+        mystr = mystr & vbCrLf
+
+        temp = coeff_(1, 1, 1, q, "A") : temp2 = -1.000293
+        mystr = mystr & pr2("A(1,1,1)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(2, 0, 2, q, "A") : temp2 = 0.25
+        mystr = mystr & pr2("A(2,0,2)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(2, 2, 2, q, "A") : temp2 = -0.0004396087
+        mystr = mystr & pr2("A(2,2,2)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(3, 1, 1, q, "A") : temp2 = 0.4073222
+        mystr = mystr & pr2("A(3,1,1)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(3, 1, 3, q, "A") : temp2 = 0.1566621
+        mystr = mystr & pr2("A(3,1,3)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(3, 3, 1, q, "A") : temp2 = -0.00007331096
+        mystr = mystr & pr2("A(3,3,1)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(3, 3, 3, q, "A") : temp2 = 0.00007309631
+        mystr = mystr & pr2("A(3,3,3)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(4, 0, 2, q, "A") : temp2 = -0.1564883
+        mystr = mystr & pr2("A(4,0,2)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(4, 0, 4, q, "A") : temp2 = -0.0312155
+        mystr = mystr & pr2("A(4,0,4)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(4, 2, 2, q, "A") : temp2 = 0.1255568
+        mystr = mystr & pr2("A(4,2,2)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(4, 2, 4, q, "A") : temp2 = 0.0269313
+        mystr = mystr & pr2("A(4,2,4)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(4, 4, 2, q, "A") : temp2 = 0.04177638
+        mystr = mystr & pr2("A(4,4,2)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(4, 4, 4, q, "A") : temp2 = -0.00001008631
+        mystr = mystr & pr2("A(4,4,4)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(5, 1, 1, q, "A") : temp2 = -0.4809001
+        mystr = mystr & pr2("A(5,1,1)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(5, 1, 3, q, "A") : temp2 = -0.2658329
+        mystr = mystr & pr2("A(5,1,3)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(5, 1, 5, q, "A") : temp2 = -0.03957723
+        mystr = mystr & pr2("A(5,1,5)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(5, 3, 1, q, "A") : temp2 = -0.09390064
+        mystr = mystr & pr2("A(5,3,1)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(5, 3, 3, q, "A") : temp2 = -0.06788393
+        mystr = mystr & pr2("A(5,3,3)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(5, 3, 5, q, "A") : temp2 = 0.003329216
+        mystr = mystr & pr2("A(5,3,5)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(5, 5, 1, q, "A") : temp2 = 0.00001604243
+        mystr = mystr & pr2("A(5,5,1)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(5, 5, 3, q, "A") : temp2 = 0.00005088142
+        mystr = mystr & pr2("A(5,5,3)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(5, 5, 5, q, "A") : temp2 = 0.000001116865
+        mystr = mystr & pr2("A(5,5,5)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+
+        mystr = mystr & vbCrLf
+
+        temp = coeff_(1, 1, 1, q, "B") : temp2 = 1
+        mystr = mystr & pr2("B(1,1,1)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(2, 2, 0, q, "B") : temp2 = 0.25
+        mystr = mystr & pr2("B(2,2,0)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(2, 2, 2, q, "B") : temp2 = 0.2505862
+        mystr = mystr & pr2("B(2,2,2)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(3, 1, 1, q, "B") : temp2 = -0.3132697
+        mystr = mystr & pr2("B(3,1,1)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(3, 1, 3, q, "B") : temp2 = -0.06260989
+        mystr = mystr & pr2("B(3,1,3)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(3, 3, 1, q, "B") : temp2 = 0.2817996
+        mystr = mystr & pr2("B(3,3,1)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(3, 3, 3, q, "B") : temp2 = 0.09408
+        mystr = mystr & pr2("B(3,3,3)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(4, 2, 0, q, "B") : temp2 = -0.1408818
+        mystr = mystr & pr2("B(4,2,0)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(4, 4, 0, q, "B") : temp2 = 0.1254033
+        mystr = mystr & pr2("B(4,4,0)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(4, 2, 2, q, "B") : temp2 = -0.3343606
+        mystr = mystr & pr2("B(4,2,2)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(4, 2, 4, q, "B") : temp2 = -0.05002256
+        mystr = mystr & pr2("B(4,2,4)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(4, 4, 2, q, "B") : temp2 = 0.0837004
+        mystr = mystr & pr2("B(4,4,2)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(4, 4, 4, q, "B") : temp2 = 0.04186642
+        mystr = mystr & pr2("B(4,4,4)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(5, 1, 1, q, "B") : temp2 = 0.3215159
+        mystr = mystr & pr2("B(5,1,1)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(5, 1, 3, q, "B") : temp2 = 0.07839174
+        mystr = mystr & pr2("B(5,1,3)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(5, 1, 5, q, "B") : temp2 = 0.007587707
+        mystr = mystr & pr2("B(5,1,5)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(5, 3, 1, q, "B") : temp2 = -0.2851435
+        mystr = mystr & pr2("B(5,3,1)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(5, 3, 3, q, "B") : temp2 = -0.2056731
+        mystr = mystr & pr2("B(5,3,3)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(5, 3, 5, q, "B") : temp2 = -0.03474901
+        mystr = mystr & pr2("B(5,3,5)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(5, 5, 1, q, "B") : temp2 = 0.09991874
+        mystr = mystr & pr2("B(5,5,1)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(5, 5, 3, q, "B") : temp2 = -0.00231718
+        mystr = mystr & pr2("B(5,5,3)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+        temp = coeff_(5, 5, 5, q, "B") : temp2 = 0.0204687
+        mystr = mystr & pr2("B(5,5,5)") & pr1(temp) & pr1(temp2) & pr1((temp - temp2) / temp * 100) & vbCrLf
+
+        mystr = mystr & vbCrLf
+        mystr = mystr & vbCrLf
+
+
+        RichTextBox1.AppendText(mystr)
+
+        RichTextBox1.AppendText("***********************************************************************************************" & vbCrLf & vbCrLf)
+        RichTextBox1.AppendText("sample calculation with T=10s, H=10m, h=100m for x=0..L/2 & t=0..T/2 with 50 divisions in x & t" & vbCrLf & vbCrLf)
+
+        mystr = "Free surface function, eta" & vbCrLf & vbCrLf & "x step:" & vbCrLf
+
+
+        For i = 0 To 50
+            mystr = mystr & CStr(i)
+            If i < 50 Then
+                mystr = mystr & ", "
+            Else
+                mystr = mystr & vbCrLf & vbCrLf
+            End If
+        Next
+
+        mystr = mystr & "x fraction:" & vbCrLf
+
+        For i = 0 To 50
+            mystr = mystr & CStr(i) & "/50*L/2"
+            If i < 50 Then
+                mystr = mystr & ", "
+            Else
+                mystr = mystr & vbCrLf & vbCrLf
+            End If
+        Next
+
+        mystr = mystr & "x (m):" & vbCrLf
+
+        For i = 0 To 50
+            mystr = mystr & CStr(L / 2 * i / 50)
+            If i < 50 Then
+                mystr = mystr & ", "
+            Else
+                mystr = mystr & vbCrLf & vbCrLf
+            End If
+        Next
+
+        RichTextBox1.AppendText(mystr)
+
+        RichTextBox1.AppendText("***********************************************************************************************" & vbCrLf & vbCrLf)
+
+        For j = 0 To 50
+
+            mystr = "time step = " & CStr(j) & ", time fraction =" & CStr(j) & "/50*T/2" & ", time=" & CStr(j / 50 * T_period / 2) & " (s)" & vbCrLf & "eta (m):" & vbCrLf
+
+
+            t_time = j / 50 * T_period / 2
+            For i = 0 To 50
+                x = i / 50 * L / 2
+                mystr = mystr & CStr(eta(q, k, eps, omega_, x, t_time, 1)) & ", "
+            Next
+
+            mystr = mystr & vbCrLf & vbCrLf
+
+            RichTextBox1.AppendText(mystr)
+
+        Next
+
+
+        RichTextBox1.AppendText("***********************************************************************************************" & vbCrLf & vbCrLf)
+
+        For j = 0 To 50
+
+            mystr = "time step = " & CStr(j) & ", time fraction =" & CStr(j) & "/50*T/2" & ", time=" & CStr(j / 50 * T_period / 2) & " (s)" & vbCrLf & "u at free surface (m/s):" & vbCrLf
+
+
+            t_time = j / 50 * T_period / 2
+            For i = 0 To 50
+                x = i / 50 * L / 2
+                mystr = mystr & CStr(phi_surf(q, k, eps, omega_, x, t_time, h_depth, 3)) & ", "
+
+            Next
+
+            mystr = mystr & vbCrLf & vbCrLf
+
+            RichTextBox1.AppendText(mystr)
+
+        Next
+
+        RichTextBox1.Select(0, 0)
+
+        bb_ = bb(eps, q) * g / k
+
+        RichTextBox2.AppendText("Wave 1" & vbCrLf)
+        RichTextBox2.AppendText("H=" & Round(H_height, 0) & " (m)")
+        RichTextBox2.AppendText(",h=" & Round(h_depth, 0) & " (m)")
+        RichTextBox2.AppendText(",L=" & Round(L, 4) & " (m)")
+        RichTextBox2.AppendText(", B=" & Round(bb_, 6) & " (m^2/s^2)")
+        RichTextBox2.AppendText(", eps=" & Round(eps, 4))
+        RichTextBox2.AppendText(", k=" & Round(k, 4) & " (1/m)")
+        RichTextBox2.AppendText(", q=" & Round(q, 4))
+        RichTextBox2.AppendText(", omega=" & Round(omega_, 4) & " (1/s)")
+        RichTextBox2.AppendText(", fk=" & Err_fk(q, k, eps, omega_, L, T_period, h_depth) & " (m/s)")
+        RichTextBox2.AppendText(", fd=" & Err_fd(q, k, eps, omega_, L, T_period, h_depth, bb_) & " (m^2/s^2)")
+
+
+        T_period = 10
+        H_height = 5
+        h_depth = 100
+        g = 9.81
+        L = L_iterator(T_period, H_height, h_depth)
+        k = 2 * pi / L
+        q = Tanh(k * h_depth)
+        eps = H_height * k / 2
+        omega_ = omega(eps, q) * Sqrt(k * g)
+        T_period2 = 2 * pi / omega_
+        bb_ = bb(eps, q) * g / k
+
+        RichTextBox2.AppendText(vbCrLf & vbCrLf)
+        RichTextBox2.AppendText("Wave 2" & vbCrLf)
+        RichTextBox2.AppendText("H=" & Round(H_height, 0) & " (m)")
+        RichTextBox2.AppendText(",h=" & Round(h_depth, 0) & " (m)")
+        RichTextBox2.AppendText(",L=" & Round(L, 4) & " (m)")
+        RichTextBox2.AppendText(", B=" & Round(bb_, 6) & " (m^2/s^2)")
+        RichTextBox2.AppendText(", eps=" & Round(eps, 4))
+        RichTextBox2.AppendText(", k=" & Round(k, 4) & " (1/m)")
+        RichTextBox2.AppendText(", q=" & Round(q, 4))
+        RichTextBox2.AppendText(", omega=" & Round(omega_, 4) & " (1/s)")
+        RichTextBox2.AppendText(", fk=" & Err_fk(q, k, eps, omega_, L, T_period, h_depth) & " (m/s)")
+        RichTextBox2.AppendText(", fd=" & Err_fd(q, k, eps, omega_, L, T_period, h_depth, bb_) & " (m^2/s^2)")
+
+
+        T_period = 10
+        H_height = 1
+        h_depth = 100
+        g = 9.81
+        L = L_iterator(T_period, H_height, h_depth)
+        k = 2 * pi / L
+        q = Tanh(k * h_depth)
+        eps = H_height * k / 2
+        omega_ = omega(eps, q) * Sqrt(k * g)
+        T_period2 = 2 * pi / omega_
+        bb_ = bb(eps, q) * g / k
+
+        RichTextBox2.AppendText(vbCrLf & vbCrLf)
+        RichTextBox2.AppendText("Wave 3" & vbCrLf)
+        RichTextBox2.AppendText("H=" & Round(H_height, 0) & " (m)")
+        RichTextBox2.AppendText(",h=" & Round(h_depth, 0) & " (m)")
+        RichTextBox2.AppendText(",L=" & Round(L, 4) & " (m)")
+        RichTextBox2.AppendText(", B=" & Round(bb_, 6) & " (m^2/s^2)")
+        RichTextBox2.AppendText(", eps=" & Round(eps, 4))
+        RichTextBox2.AppendText(", k=" & Round(k, 4) & " (1/m)")
+        RichTextBox2.AppendText(", q=" & Round(q, 4))
+        RichTextBox2.AppendText(", omega=" & Round(omega_, 4) & " (1/s)")
+        RichTextBox2.AppendText(", fk=" & Err_fk(q, k, eps, omega_, L, T_period, h_depth) & " (m/s)")
+        RichTextBox2.AppendText(", fd=" & Err_fd(q, k, eps, omega_, L, T_period, h_depth, bb_) & " (m^2/s^2)")
+
+
+        T_period = 10
+        H_height = 0.5
+        h_depth = 100
+        g = 9.81
+        L = L_iterator(T_period, H_height, h_depth)
+        k = 2 * pi / L
+        q = Tanh(k * h_depth)
+        eps = H_height * k / 2
+        omega_ = omega(eps, q) * Sqrt(k * g)
+        T_period2 = 2 * pi / omega_
+        bb_ = bb(eps, q) * g / k
+
+        RichTextBox2.AppendText(vbCrLf & vbCrLf)
+        RichTextBox2.AppendText("Wave 4" & vbCrLf)
+        RichTextBox2.AppendText("H=" & Round(H_height, 0) & " (m)")
+        RichTextBox2.AppendText(",h=" & Round(h_depth, 0) & " (m)")
+        RichTextBox2.AppendText(",L=" & Round(L, 4) & " (m)")
+        RichTextBox2.AppendText(", B=" & Round(bb_, 6) & " (m^2/s^2)")
+        RichTextBox2.AppendText(", eps=" & Round(eps, 4))
+        RichTextBox2.AppendText(", k=" & Round(k, 4) & " (1/m)")
+        RichTextBox2.AppendText(", q=" & Round(q, 4))
+        RichTextBox2.AppendText(", omega=" & Round(omega_, 4) & " (1/s)")
+        RichTextBox2.AppendText(", fk=" & Err_fk(q, k, eps, omega_, L, T_period, h_depth) & " (m/s)")
+        RichTextBox2.AppendText(", fd=" & Err_fd(q, k, eps, omega_, L, T_period, h_depth, bb_) & " (m^2/s^2)")
+
+        RichTextBox2.Select(0, 0)
+    End Sub
+
+    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
+        niii = TextBox4.Text
+
+        Dim mystr As String
+        Dim L As Double
+        Dim k As Double
+        Dim eps As Double
+        Dim T_period As Double
+        Dim T_period2 As Double
+        Dim H_height As Double
+        Dim h_depth As Double
+        Dim q As Double
+        Dim g As Double
+        Dim omega_ As Double
+        Dim x As Double
+        Dim t_time As Double
+        Dim bb_ As Double
+
+        h_depth = TextBox1.Text
+        H_height = TextBox2.Text
+        T_period = TextBox3.Text
+
+        g = 9.81
+        L = L_iterator(T_period, H_height, h_depth)
+        k = 2 * pi / L
+        q = Tanh(k * h_depth)
+        eps = H_height * k / 2
+        omega_ = omega(eps, q) * Sqrt(k * g)
+        T_period2 = 2 * pi / omega_
+        bb_ = bb(eps, q) * g / k
+
+        Dim x_with_zero_z As Double
+
+        x_with_zero_z = L / 4
+        For i = 1 To 100
+            x_with_zero_z = x_with_zero_z + eta(q, k, eps, omega_, x_with_zero_z, 0, 1) / 10
+
+        Next
+
+        RichTextBox3.Clear()
+        RichTextBox3.AppendText(",L=" & Round(L, 4) & " (m)")
+        RichTextBox3.AppendText(", B=" & Round(bb_, 6) & " (m^2/s^2)")
+        RichTextBox3.AppendText(", eps=" & Round(eps, 4))
+        RichTextBox3.AppendText(", k=" & Round(k, 4) & " (1/m)")
+        RichTextBox3.AppendText(", q=" & Round(q, 4))
+        RichTextBox3.AppendText(", omega=" & Round(omega_, 4) & " (1/s)")
+        RichTextBox3.AppendText(", x_zero=" & Round(x_with_zero_z, 4) & " (m)")
+        RichTextBox3.AppendText(", fk=" & Err_fk(q, k, eps, omega_, L, T_period, h_depth) & " (m/s)")
+        RichTextBox3.AppendText(", fd=" & Err_fd(q, k, eps, omega_, L, T_period, h_depth, bb_) & " (m^2/s^2)")
+
+        mystr = vbCrLf
+        mystr = mystr & vbCrLf
+
+
+        RichTextBox3.AppendText(mystr)
+
+        RichTextBox3.AppendText("***********************************************************************************************" & vbCrLf & vbCrLf)
+        RichTextBox3.AppendText("calculation with T=" & T_period & "s, H=" & H_height & "m, h=" & h_depth & "m for x=0..L/2 & t=0..T/2 with 50 divisions in x & t" & vbCrLf & vbCrLf)
+
+        mystr = "Free surface function, eta" & vbCrLf & vbCrLf & "x step:" & vbCrLf
+
+
+        For i = 0 To 50
+            mystr = mystr & CStr(i)
+            If i < 50 Then
+                mystr = mystr & ", "
+            Else
+                mystr = mystr & vbCrLf & vbCrLf
+            End If
+        Next
+
+        mystr = mystr & "x fraction:" & vbCrLf
+
+        For i = 0 To 50
+            mystr = mystr & CStr(i) & "/50*L/2"
+            If i < 50 Then
+                mystr = mystr & ", "
+            Else
+                mystr = mystr & vbCrLf & vbCrLf
+            End If
+        Next
+
+        mystr = mystr & "x (m):" & vbCrLf
+
+        For i = 0 To 50
+            mystr = mystr & CStr(L / 2 * i / 50)
+            If i < 50 Then
+                mystr = mystr & ", "
+            Else
+                mystr = mystr & vbCrLf & vbCrLf
+            End If
+        Next
+
+        RichTextBox3.AppendText(mystr)
+
+        RichTextBox3.AppendText("***********************************************************************************************" & vbCrLf & vbCrLf)
+
+        For j = 0 To 50
+
+            mystr = "time step = " & CStr(j) & ", time fraction =" & CStr(j) & "/50*T/2" & ", time=" & CStr(j / 50 * T_period / 2) & " (s)" & vbCrLf & "eta (m):" & vbCrLf
+
+
+            t_time = j / 50 * T_period / 2
+            For i = 0 To 50
+                x = i / 50 * L / 2
+                mystr = mystr & CStr(eta(q, k, eps, omega_, x, t_time, 1)) & ", "
+            Next
+
+            mystr = mystr & vbCrLf & vbCrLf
+
+            RichTextBox3.AppendText(mystr)
+
+        Next
+
+
+        RichTextBox3.AppendText("***********************************************************************************************" & vbCrLf & vbCrLf)
+        Dim z As Double
+
+
+        mystr = "z (m)=" & vbCrLf
+        For kk = 0 To 200
+            mystr = mystr & kk / 200 * (h_depth + H_height) & ", "
+        Next
+        mystr = mystr & vbCrLf & vbCrLf
+
+        RichTextBox3.AppendText(mystr)
+
+        For j = 0 To 50
+            t_time = j / 50 * T_period / 2
+            For i = 0 To 0
+                x = i / 50 * L / 2
+
+                mystr = "time step = " & CStr(j) & ", time fraction =" & CStr(j) & "/50*T/2" & ", time=" & CStr(j / 50 * T_period / 2) & " (s)" & vbCrLf
+                mystr = mystr & "x step = " & CStr(i) & ", x fraction =" & CStr(i) & "/50*L/2" & ", x=" & CStr(i / 50 * L / 2) & " (m)" & vbCrLf
+                mystr = mystr & "dynamic pressure head divided by initial depth=" & vbCrLf
+
+                For kk = 0 To 200
+                    z = -h_depth + kk / 200 * (h_depth + H_height)
+                    If z <= eta(q, k, eps, omega_, x, t_time, 1) Then
+                        mystr = mystr & Pressure_head(q, k, eps, omega_, x, t_time, h_depth, 1, z, bb_) / h_depth & ", "
+                    Else
+                        mystr = mystr & "0, "
+                    End If
+
+
+
+                Next
+
+                mystr = mystr & vbCrLf & vbCrLf
+
+                RichTextBox3.AppendText(mystr)
+
+            Next
+        Next
+
+        RichTextBox3.AppendText("***********************************************************************************************" & vbCrLf & vbCrLf)
+
+        RichTextBox3.AppendText("Some selected path lines for points on the free surface" & vbCrLf & vbCrLf)
+
+        Dim path_counter As Integer
+
+        For path_counter = 0 To 3
+            RichTextBox3.AppendText("pathline " & path_counter & vbCrLf)
+            RichTextBox3.AppendText("x (m), z (m), eta(x) (m), t (s), u (m/s), w (m/s)" & vbCrLf)
+            x = path_counter / 3 * L / 4
+            If path_counter = 3 Then
+                x = x_with_zero_z
+            End If
+
+            t_time = 0
+            z = eta(q, k, eps, omega_, x, t_time, 1)
+            Dim z_surf As Double
+            Dim dt As Double
+            dt = 0.005 * T_period
+            Dim u1, w1 As Double
+            Dim xtemp, ztemp, u1temp, w1temp As Double
+            u1 = phi(q, k, eps, omega_, x, t_time, z, h_depth, 3)
+            w1 = phi(q, k, eps, omega_, x, t_time, z, h_depth, 4)
+            RichTextBox3.AppendText(x & ", " & z & ", " & z & ", " & t_time & ", " & u1 & ", " & w1 & vbCrLf)
+            For i = 1 To 200
+                u1 = phi(q, k, eps, omega_, x, t_time, z, h_depth, 3)
+                w1 = phi(q, k, eps, omega_, x, t_time, z, h_depth, 4)
+
+                t_time = i * dt
+                For ii = 1 To 10
+                    xtemp = x + u1 * dt
+                    ztemp = z + w1 * dt
+                    u1temp = phi(q, k, eps, omega_, xtemp, t_time, ztemp, h_depth, 3)
+                    w1temp = phi(q, k, eps, omega_, xtemp, t_time, ztemp, h_depth, 4)
+                    xtemp = x + (u1 + u1temp) / 2 * dt
+                    ztemp = z + (w1 + w1temp) / 2 * dt
+                Next
+                x = xtemp
+                z = ztemp
+                z_surf = eta(q, k, eps, omega_, x, t_time, 1)
+
+                RichTextBox3.AppendText(x & ", " & z & ", " & z_surf & ", " & t_time & ", " & u1 & ", " & w1 & vbCrLf)
+            Next
+            RichTextBox3.AppendText(vbCrLf & vbCrLf)
+        Next
+
+        For path_counter = 0 To 3
+            RichTextBox3.AppendText("pathline " & path_counter & vbCrLf)
+            RichTextBox3.AppendText("x (m), z (m), t (s), u (m/s), w (m/s)" & vbCrLf)
+            x = path_counter / 3 * L / 4
+            t_time = 0
+            z = -h_depth / 10
+            Dim z_surf As Double
+            Dim dt As Double
+            dt = 0.005 * T_period
+            Dim u1, w1 As Double
+            Dim xtemp, ztemp, u1temp, w1temp As Double
+            u1 = phi(q, k, eps, omega_, x, t_time, z, h_depth, 3)
+            w1 = phi(q, k, eps, omega_, x, t_time, z, h_depth, 4)
+            RichTextBox3.AppendText(x & ", " & z & ", " & t_time & ", " & u1 & ", " & w1 & vbCrLf)
+            For i = 1 To 200
+                u1 = phi(q, k, eps, omega_, x, t_time, z, h_depth, 3)
+                w1 = phi(q, k, eps, omega_, x, t_time, z, h_depth, 4)
+
+                t_time = i * dt
+                For ii = 1 To 10
+                    xtemp = x + u1 * dt
+                    ztemp = z + w1 * dt
+                    u1temp = phi(q, k, eps, omega_, xtemp, t_time, ztemp, h_depth, 3)
+                    w1temp = phi(q, k, eps, omega_, xtemp, t_time, ztemp, h_depth, 4)
+                    xtemp = x + (u1 + u1temp) / 2 * dt
+                    ztemp = z + (w1 + w1temp) / 2 * dt
+                Next
+                x = xtemp
+                z = ztemp
+                z_surf = eta(q, k, eps, omega_, x, t_time, 1)
+
+                RichTextBox3.AppendText(x & ", " & z & ", " & t_time & ", " & u1 & ", " & w1 & vbCrLf)
+            Next
+            RichTextBox3.AppendText(vbCrLf & vbCrLf)
+        Next
+
+        For path_counter = 0 To 3
+            RichTextBox3.AppendText("pathline " & path_counter & vbCrLf)
+            RichTextBox3.AppendText("x (m), z (m), t (s), u (m/s), w (m/s)" & vbCrLf)
+            x = path_counter / 3 * L / 4
+            t_time = 0
+            z = -h_depth / 4
+            Dim z_surf As Double
+            Dim dt As Double
+            dt = 0.005 * T_period
+            Dim u1, w1 As Double
+            Dim xtemp, ztemp, u1temp, w1temp As Double
+            u1 = phi(q, k, eps, omega_, x, t_time, z, h_depth, 3)
+            w1 = phi(q, k, eps, omega_, x, t_time, z, h_depth, 4)
+            RichTextBox3.AppendText(x & ", " & z & ", " & t_time & ", " & u1 & ", " & w1 & vbCrLf)
+            For i = 1 To 200
+                u1 = phi(q, k, eps, omega_, x, t_time, z, h_depth, 3)
+                w1 = phi(q, k, eps, omega_, x, t_time, z, h_depth, 4)
+
+                t_time = i * dt
+                For ii = 1 To 10
+                    xtemp = x + u1 * dt
+                    ztemp = z + w1 * dt
+                    u1temp = phi(q, k, eps, omega_, xtemp, t_time, ztemp, h_depth, 3)
+                    w1temp = phi(q, k, eps, omega_, xtemp, t_time, ztemp, h_depth, 4)
+                    xtemp = x + (u1 + u1temp) / 2 * dt
+                    ztemp = z + (w1 + w1temp) / 2 * dt
+                Next
+                x = xtemp
+                z = ztemp
+                z_surf = eta(q, k, eps, omega_, x, t_time, 1)
+
+                RichTextBox3.AppendText(x & ", " & z & ", " & t_time & ", " & u1 & ", " & w1 & vbCrLf)
+            Next
+            RichTextBox3.AppendText(vbCrLf & vbCrLf)
+        Next
+
+    End Sub
+
+
+End Class
